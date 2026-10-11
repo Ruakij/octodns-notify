@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1210 310" width="1210" height="310" role="img" aria-labelledby="t">
+  <title id="t">A NOTIFY from Technitium makes octoDNS read the zone and apply its public view to Cloudflare DNS</title>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#374151"/>
+    </marker>
+    <marker id="ahd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6B7280"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1F2937; font-size: 22px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 21px; }
+    .h { font-size: 26px; font-weight: 700; }
+    .cap { font-size: 22px; font-weight: 600; }
+  </style>
+
+  <rect x="0" y="0" width="1210" height="310" rx="16" fill="#F8FAFC" stroke="#D0D7DE" stroke-width="2"/>
+
+  <!-- Technitium -->
+  <rect x="10" y="12" width="442" height="224" rx="16" fill="#E8F1FB" stroke="#2B6CB0" stroke-width="3"/>
+  <text x="26" y="50" class="h" style="fill:#1A365D">Technitium</text>
+  <g fill="#FFFFFF" stroke="#9DBBE0" stroke-width="2">
+    <rect x="22" y="66" width="418" height="44" rx="10"/>
+    <rect x="22" y="122" width="418" height="100" rx="10"/>
+  </g>
+  <text x="34" y="95" class="mono">mail.example.com A 203.0.113.10</text>
+  <text x="34" y="163" class="mono">app.example.com APP</text>
+  <text x="34" y="195" class="mono">int <tspan style="fill:#2B6CB0;font-weight:700">10.0.0.5</tspan> / pub <tspan style="fill:#C2540A;font-weight:700">203.0.113.20</tspan></text>
+
+  <!-- Sync -->
+  <rect x="496" y="12" width="218" height="224" rx="16" fill="#F1F3F5" stroke="#6B7280" stroke-width="3"/>
+  <text x="605" y="50" text-anchor="middle" class="h">octodns-notify</text>
+  <g stroke="#9CA3AF" stroke-width="2" fill="#FFFFFF">
+    <rect x="508" y="66" width="194" height="44" rx="10"/>
+    <rect x="508" y="122" width="194" height="44" rx="10"/>
+    <rect x="508" y="178" width="194" height="44" rx="10"/>
+  </g>
+  <g fill="#6B7280">
+    <circle cx="531" cy="88" r="14"/><circle cx="531" cy="144" r="14"/><circle cx="531" cy="200" r="14"/>
+  </g>
+  <g text-anchor="middle" style="font-weight:700">
+    <text x="531" y="95" style="fill:#FFFFFF;font-size:19px">1</text>
+    <text x="531" y="151" style="fill:#FFFFFF;font-size:19px">2</text>
+    <text x="531" y="207" style="fill:#FFFFFF;font-size:19px">3</text>
+  </g>
+  <text x="554" y="95" style="font-size:16px">NOTIFY received</text>
+  <text x="554" y="144" style="font-size:16px">octoDNS reads</text>
+  <text x="554" y="160" style="font-size:16px">public view</text>
+  <text x="554" y="205" style="font-size:16px">plan + apply</text>
+
+  <!-- Cloudflare -->
+  <rect x="758" y="12" width="442" height="224" rx="16" fill="#FFF1E3" stroke="#F6821F" stroke-width="3"/>
+  <text x="774" y="50" class="h" style="fill:#7B3F00">Cloudflare</text>
+  <g fill="#FFFFFF" stroke="#F5B67A" stroke-width="2">
+    <rect x="770" y="66" width="418" height="44" rx="10"/>
+    <rect x="770" y="122" width="418" height="100" rx="10"/>
+  </g>
+  <text x="782" y="95" class="mono">mail.example.com A 203.0.113.10</text>
+  <text x="782" y="163" class="mono">app.example.com A</text>
+  <text x="782" y="195" class="mono" style="fill:#C2540A;font-weight:700">203.0.113.20</text>
+
+  <!-- Flow -->
+  <line x1="452" y1="124" x2="494" y2="124" stroke="#374151" stroke-width="4" marker-end="url(#ah)"/>
+  <line x1="714" y1="124" x2="756" y2="124" stroke="#374151" stroke-width="4" marker-end="url(#ah)"/>
+  <text x="473" y="112" text-anchor="middle" style="font-size:15px;fill:#4B5563">API</text>
+  <path d="M400 236 V258 H605 V240" fill="none" stroke="#6B7280" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ahd)"/>
+  <text x="502" y="288" text-anchor="middle" style="fill:#4B5563;font-style:italic">NOTIFY</text>
+
+  <!-- Captions -->
+  <text x="16" y="262" class="cap" style="fill:#2B6CB0">internal clients: 10.0.0.5</text>
+  <text x="1194" y="262" text-anchor="end" class="cap" style="fill:#C2540A">internet: 203.0.113.20</text>
+</svg>

@@ -1,11 +1,18 @@
 # octodns-notify
 
+[![octoDNS](https://img.shields.io/badge/octoDNS-1.22.0-0B7285)](https://github.com/octodns/octodns)
+
 **Runs [octoDNS](https://github.com/octodns/octodns) for a zone when a DNS NOTIFY for it arrives.**
 
-Any primary that sends NOTIFY can trigger a sync; it is meant for
-[Technitium](https://technitium.com/dns/) with the
-[octodns-technitium](https://github.com/Ruakij/octodns-technitium) source, so a zone
-change is published to Cloudflare (or any other octoDNS target) within seconds.
+![Overview](docs/overview.svg)
+
+This repo holds two parts:
+
+- `octodns-notify`, a generic notifier: any primary that sends NOTIFY can trigger a
+  sync with any octoDNS source and target.
+- `octodns_technitium`, an octoDNS source for [Technitium](https://technitium.com/dns/).
+  Technitium stays the source: a zone change is published to Cloudflare (or any other
+  octoDNS target) within seconds, and with Split Horizon only the public answers go out.
 
 ## How it works
 
@@ -23,7 +30,7 @@ change is published to Cloudflare (or any other octoDNS target) within seconds.
 Wildcard zone names in the config are skipped. There is no TSIG and no source
 allowlist: a forged NOTIFY for a known zone only causes one extra sync.
 
-## Technitium
+## Technitium NOTIFY
 
 In the zone options of each zone, under Zone Notify, choose "Specified name servers"
 and enter the address of this service. Technitium sends NOTIFY over UDP to port 53,
@@ -47,24 +54,56 @@ spec:
 
 The Service ClusterIP is the address for Technitium.
 
-## octoDNS config
+## Technitium source
 
 ```yaml
 providers:
   technitium:
     class: octodns_technitium.TechnitiumSource
     url: https://dns.example.com
-    token: env/TECHNITIUM_TOKEN
+    token: env/TECHNITIUM_TOKEN  # needs View on the zones
+    # view: public               # Split Horizon view of SimpleAddress records
+    # public_only: true          # leave out addresses that are not public
+    # timeout: 30
   cloudflare:
     class: octodns_cloudflare.CloudflareProvider
     token: env/CLOUDFLARE_API_TOKEN
-    min_ttl: 60
+    min_ttl: 60                  # the Cloudflare minimum, octoDNS defaults to 120
+
+# Optional: only touch the records octoDNS created, the rest of the zone is left alone.
+processors:
+  ownership:
+    class: octodns.processor.ownership.OwnershipProcessor
 
 zones:
   example.com.:
     sources: [technitium]
+    processors: [ownership]
     targets: [cloudflare]
 ```
+
+The zone must exist in Technitium; octoDNS names carry a trailing dot. Syncs are dry
+runs unless `--doit` is given.
+
+### Record mapping
+
+| Technitium | octoDNS |
+|---|---|
+| A, AAAA, CNAME, MX, TXT, SRV, CAA | as is |
+| NS | as is, the apex NS is skipped |
+| APP `SimpleAddress` | the addresses of the `view` split into A and AAAA |
+| SOA, other APP, DNSSEC | skipped |
+| disabled records | skipped |
+
+- Values of one name and type form one record set; duplicates are dropped and the
+  lowest TTL wins.
+- A comment containing `cf:proxied` on an A, AAAA or CNAME record (or on the APP
+  record behind the addresses) sets `octodns: {cloudflare: {proxied: true}}`.
+- `;` in TXT values is escaped as `\;`.
+- An APP record with unreadable data fails the run, as skipping it would delete the
+  addresses of its name in the target.
+- Addresses that are not public (private, CGNAT, ULA, loopback, link-local) are left
+  out with one warning per address. `public_only: false` keeps them.
 
 ## Usage
 
@@ -82,25 +121,37 @@ octodns-notify --config-file config.yaml [--doit] [--listen 0.0.0.0] [--port 535
 
 octoDNS (`octodns-sync`) and the providers named in the config must be installed.
 
+## Images
+
+| Image | Contains | Use for |
+|---|---|---|
+| `ghcr.io/ruakij/octodns-notify` | octoDNS, the notifier | any other source or target, as a base |
+| `ghcr.io/ruakij/octodns-notify-technitium` | the above, the Cloudflare provider, the Technitium source | Technitium to Cloudflare |
+
 ```sh
 docker run --rm -v ./config.yaml:/config/config.yaml:ro -p 5353:5353/udp \
   -e TECHNITIUM_TOKEN=... -e CLOUDFLARE_API_TOKEN=... \
-  ghcr.io/ruakij/octodns-notify --config-file /config/config.yaml --doit
+  ghcr.io/ruakij/octodns-notify-technitium --config-file /config/config.yaml --doit
 ```
 
-The image contains octoDNS, the Cloudflare provider and the Technitium source.
+Other providers go into a derived image:
+
+```dockerfile
+FROM ghcr.io/ruakij/octodns-notify
+USER root
+RUN pip install --no-cache-dir octodns-route53
+USER 65532:65532
+```
 
 ## Development
 
 ```sh
-python -m venv .venv && .venv/bin/pip install -e '.[test]' octodns
+python -m venv .venv && .venv/bin/pip install -e '.[test]'
 .venv/bin/pytest
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
+docker build --target base .
+docker build --target technitium .
 ```
 
-Until the Technitium source is on GitHub, the image builds with a local wheel placed
-in the build context:
-
-```sh
-docker build --build-arg TECHNITIUM_PLUGIN=/src/octodns_technitium-0.1.0-py3-none-any.whl .
-```
+The wheel contains only the notifier; the Technitium source is copied into the
+`technitium` image from `octodns_technitium/`.

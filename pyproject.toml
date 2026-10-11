@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest", "ruff"]
+test = ["pytest", "ruff", "octodns"]
 
 [project.scripts]
 octodns-notify = "octodns_notify:main"
@@ -27,5 +27,9 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.hatch.build.targets.wheel]
+include = ["octodns_notify.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
