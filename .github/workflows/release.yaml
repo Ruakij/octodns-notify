@@ -10,6 +10,13 @@ permissions: {}
 jobs:
   image:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: base
+            image: ghcr.io/ruakij/octodns-notify
+          - target: technitium
+            image: ghcr.io/ruakij/octodns-notify-technitium
     permissions:
       contents: read
       packages: write
@@ -26,7 +33,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -34,6 +41,7 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
+          target: ${{ matrix.target }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
